@@ -1,0 +1,9 @@
+name: 'Review assign'
+description: 'Review & assign'
+inputs:
+  repo-token:
+    description: 'Repository access token'
+    required: true
+runs:
+  using: 'node12'
+  main: 'main.js'
