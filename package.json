@@ -1,0 +1,30 @@
+{
+  "name": "review-assign-action",
+  "version": "1.0.0",
+  "description": "Reviews & assign PRs",
+  "main": "main.js",
+  "scripts": {
+    "build": "ncc build src/main.ts",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hmarr/auto-approve-action.git"
+  },
+  "keywords": [
+    "actions"
+  ],
+  "author": "medric",
+  "dependencies": {
+    "@actions/core": "^1.2.0",
+    "@actions/github": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.9.4",
+    "@zeit/ncc": "^0.22.1",
+    "prettier": "^1.19.1",
+    "typescript": "^3.8.3"
+  }
+}
