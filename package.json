@@ -2,7 +2,7 @@
   "name": "review-assign-action",
   "version": "1.0.0",
   "description": "Reviews & assign PRs",
-  "main": "main.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/main.ts",
     "format": "prettier --write **/*.ts",
