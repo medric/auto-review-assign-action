@@ -1,8 +1,11 @@
 name: 'Review assign'
 description: 'Review & assign'
 inputs:
-  repo-token:
+  token:
     description: 'Repository access token'
+    required: true
+  reviewers:
+    description: 'Reviewers to assign'
     required: true
 runs:
   using: 'node12'
