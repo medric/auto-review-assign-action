@@ -68,8 +68,7 @@ export async function run() {
       DEFAULT_POLL_INTERVAL
     );
 
-
-    console.log(checkRuns)
+    core.info(''+ JSON.stringify(checkRuns));
 
     if (checkRuns && !allChecksSuccess(checkRuns)) {
       core.info(`PR @${github.context.sha} has failed`);
