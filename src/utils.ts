@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 
 export const allChecksSuccess = (
   checkRuns: Octokit.ChecksListForRefResponseCheckRunsItem[]
-) => true;
+) => false;
   // checkRuns.every(
   //   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
   //     checkRun.conclusion === "success"
