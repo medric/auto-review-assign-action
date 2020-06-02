@@ -1451,8 +1451,8 @@ const createPullRequest = (client, context) => {
                         reviewers,
                     });
                 }
-                catch (e) {
-                    throw e;
+                catch (error) {
+                    core.setFailed(error.message);
                 }
             });
         },
@@ -1462,8 +1462,8 @@ const createPullRequest = (client, context) => {
                     const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo });
                     return commit_sha || context.sha;
                 }
-                catch (e) {
-                    return e;
+                catch (error) {
+                    core.setFailed(error.message);
                 }
             });
         },
@@ -1481,8 +1481,9 @@ const createPullRequest = (client, context) => {
                     });
                     return check_runs;
                 }
-                catch (e) {
-                    throw e;
+                catch (error) {
+                    core.setFailed(error.message);
+                    return [];
                 }
             });
         },
@@ -1496,6 +1497,9 @@ function run() {
             const client = new github.GitHub(token);
             const pr = createPullRequest(client, github.context);
             const commitSha = yield pr.getCommitSha();
+            if (!commitSha) {
+                return;
+            }
             const checkRuns = yield poll_1.poll(() => pr.getCheckRuns(commitSha), utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
             if (checkRuns && utils_1.allChecksSuccess(checkRuns)) {
                 core.info(`PR @${github.context.sha} has passed`);
