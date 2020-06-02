@@ -83,15 +83,13 @@ export async function run() {
       DEFAULT_POLL_INTERVAL
     );
 
-    if (checkRuns && !allChecksSuccess(checkRuns)) {
-      core.info(`PR @${github.context.sha} has failed`);
-      pr.addReviewers(reviewers);
+    if (checkRuns && allChecksSuccess(checkRuns)) {
+      core.info(`PR @${github.context.sha} has passed`);
       return;
     }
 
-    core.info(`PR @${github.context.sha} has passed`);
-
-    return;
+    core.info(`PR @${github.context.sha} has failed`);
+    pr.addReviewers(reviewers);
   } catch (error) {
     core.setFailed(error.message);
   }
