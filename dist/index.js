@@ -1443,38 +1443,47 @@ const createPullRequest = (client, context) => {
     return {
         addReviewers(reviewers) {
             return __awaiter(this, void 0, void 0, function* () {
-                yield client.pulls
-                    .createReviewRequest({
-                    owner,
-                    repo,
-                    pull_number,
-                    reviewers,
-                })
-                    .catch((e) => {
+                try {
+                    yield client.pulls.createReviewRequest({
+                        owner,
+                        repo,
+                        pull_number,
+                        reviewers,
+                    });
+                }
+                catch (e) {
                     throw e;
-                });
+                }
             });
         },
         getCommitSha() {
             return __awaiter(this, void 0, void 0, function* () {
-                const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo }).catch((e) => {
-                    throw e;
-                });
-                return commit_sha || context.sha;
+                try {
+                    const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo });
+                    return commit_sha || context.sha;
+                }
+                catch (e) {
+                    return e;
+                }
             });
         },
         getCheckRuns(commitSha) {
             return __awaiter(this, void 0, void 0, function* () {
-                const { data: { check_runs }, } = yield client.checks
-                    .listForRef({
-                    owner,
-                    repo,
-                    ref: commitSha,
-                })
-                    .catch((e) => {
+                try {
+                    const { data: { check_runs }, } = yield client.checks
+                        .listForRef({
+                        owner,
+                        repo,
+                        ref: commitSha,
+                    })
+                        .catch((e) => {
+                        throw e;
+                    });
+                    return check_runs;
+                }
+                catch (e) {
                     throw e;
-                });
-                return check_runs;
+                }
             });
         },
     };
