@@ -1497,13 +1497,12 @@ function run() {
             const pr = createPullRequest(client, github.context);
             const commitSha = yield pr.getCommitSha();
             const checkRuns = yield poll_1.poll(() => pr.getCheckRuns(commitSha), utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
-            if (checkRuns && !utils_1.allChecksSuccess(checkRuns)) {
-                core.info(`PR @${github.context.sha} has failed`);
-                pr.addReviewers(reviewers);
+            if (checkRuns && utils_1.allChecksSuccess(checkRuns)) {
+                core.info(`PR @${github.context.sha} has passed`);
                 return;
             }
-            core.info(`PR @${github.context.sha} has passed`);
-            return;
+            core.info(`PR @${github.context.sha} has failed`);
+            pr.addReviewers(reviewers);
         }
         catch (error) {
             core.setFailed(error.message);
