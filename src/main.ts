@@ -59,6 +59,7 @@ const createPullRequest = (client: Octokit, context: Context) => {
         return check_runs;
       } catch (error) {
         core.setFailed(error.message);
+        return [];
       }
     },
   };
@@ -73,6 +74,10 @@ export async function run() {
 
     const pr = createPullRequest(client, github.context);
     const commitSha = await pr.getCommitSha();
+
+    if (!commitSha) {
+      return;
+    }
 
     const checkRuns = await poll<
       Octokit.ChecksListForRefResponseCheckRunsItem[]
