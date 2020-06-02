@@ -25,8 +25,8 @@ const createPullRequest = (client: Octokit, context: Context) => {
           pull_number,
           reviewers,
         });
-      } catch (e) {
-        throw e;
+      } catch (error) {
+        core.setFailed(error.message);
       }
     },
     async getCommitSha() {
@@ -38,8 +38,8 @@ const createPullRequest = (client: Octokit, context: Context) => {
         } = await client.pulls.get({ owner, pull_number, repo });
 
         return commit_sha || context.sha;
-      } catch (e) {
-        return e;
+      } catch (error) {
+        core.setFailed(error.message);
       }
     },
     async getCheckRuns(commitSha: string) {
@@ -57,8 +57,8 @@ const createPullRequest = (client: Octokit, context: Context) => {
           });
 
         return check_runs;
-      } catch (e) {
-        throw e;
+      } catch (error) {
+        core.setFailed(error.message);
       }
     },
   };
