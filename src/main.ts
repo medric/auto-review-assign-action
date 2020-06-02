@@ -68,6 +68,9 @@ export async function run() {
       DEFAULT_POLL_INTERVAL
     );
 
+
+    console.log(checkRuns)
+
     if (checkRuns && !allChecksSuccess(checkRuns)) {
       core.info(`PR @${github.context.sha} has failed`);
       pr.addReviewers(reviewers);
