@@ -18,31 +18,40 @@ const createPullRequest = (client: Octokit, context: Context) => {
 
   return {
     async addReviewers(reviewers: string[]) {
-      const result = await client.pulls.createReviewRequest({
-        owner,
-        repo,
-        pull_number,
-        reviewers,
-      });
-      core.debug(JSON.stringify(result));
+      await client.pulls
+        .createReviewRequest({
+          owner,
+          repo,
+          pull_number,
+          reviewers,
+        })
+        .catch((e) => {
+          throw e;
+        });
     },
     async getCommitSha() {
       const {
         data: {
           head: { sha: commit_sha },
         },
-      } = await client.pulls.get({ owner, pull_number, repo });
+      } = await client.pulls.get({ owner, pull_number, repo }).catch((e) => {
+        throw e;
+      });
 
       return commit_sha || context.sha;
     },
     async getCheckRuns(commitSha: string) {
       const {
         data: { check_runs },
-      } = await client.checks.listForRef({
-        owner,
-        repo,
-        ref: commitSha,
-      });
+      } = await client.checks
+        .listForRef({
+          owner,
+          repo,
+          ref: commitSha,
+        })
+        .catch((e) => {
+          throw e;
+        });
 
       return check_runs;
     },
@@ -67,8 +76,6 @@ export async function run() {
       DEFAULT_POLL_TIMEOUT,
       DEFAULT_POLL_INTERVAL
     );
-
-    core.info(''+ JSON.stringify(checkRuns));
 
     if (checkRuns && !allChecksSuccess(checkRuns)) {
       core.info(`PR @${github.context.sha} has failed`);
