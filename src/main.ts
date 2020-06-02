@@ -18,42 +18,48 @@ const createPullRequest = (client: Octokit, context: Context) => {
 
   return {
     async addReviewers(reviewers: string[]) {
-      await client.pulls
-        .createReviewRequest({
+      try {
+        await client.pulls.createReviewRequest({
           owner,
           repo,
           pull_number,
           reviewers,
-        })
-        .catch((e) => {
-          throw e;
         });
+      } catch (e) {
+        throw e;
+      }
     },
     async getCommitSha() {
-      const {
-        data: {
-          head: { sha: commit_sha },
-        },
-      } = await client.pulls.get({ owner, pull_number, repo }).catch((e) => {
-        throw e;
-      });
+      try {
+        const {
+          data: {
+            head: { sha: commit_sha },
+          },
+        } = await client.pulls.get({ owner, pull_number, repo });
 
-      return commit_sha || context.sha;
+        return commit_sha || context.sha;
+      } catch (e) {
+        return e;
+      }
     },
     async getCheckRuns(commitSha: string) {
-      const {
-        data: { check_runs },
-      } = await client.checks
-        .listForRef({
-          owner,
-          repo,
-          ref: commitSha,
-        })
-        .catch((e) => {
-          throw e;
-        });
+      try {
+        const {
+          data: { check_runs },
+        } = await client.checks
+          .listForRef({
+            owner,
+            repo,
+            ref: commitSha,
+          })
+          .catch((e) => {
+            throw e;
+          });
 
-      return check_runs;
+        return check_runs;
+      } catch (e) {
+        throw e;
+      }
     },
   };
 };
