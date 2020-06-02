@@ -69,8 +69,12 @@ export async function run() {
     );
 
     if (checkRuns && !allChecksSuccess(checkRuns)) {
+      core.info(`PR @${github.context.sha} has failed`);
       pr.addReviewers(reviewers);
+      return;
     }
+
+    core.info(`PR @${github.context.sha} has passed`);
 
     return;
   } catch (error) {
@@ -78,4 +82,4 @@ export async function run() {
   }
 }
 
-run().then(() => console.log("Done!"));
+run().then(() => core.info("Done!"));
