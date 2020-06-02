@@ -1407,25 +1407,93 @@ module.exports = require("child_process");
 /***/ }),
 
 /***/ 131:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
-const core = __webpack_require__(470);
-const github = __webpack_require__(469);
-try {
-    // `who-to-greet` input defined in action metadata file
-    const nameToGreet = core.getInput('who-to-greet');
-    console.log(`Hello ${nameToGreet}!`);
-    const time = (new Date()).toTimeString();
-    core.setOutput("time", time);
-    // Get the JSON webhook payload for the event that triggered the workflow
-    const payload = JSON.stringify(github.context.payload, undefined, 2);
-    console.log(`The event payload: ${payload}`);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const github = __importStar(__webpack_require__(469));
+const poll_1 = __webpack_require__(931);
+const utils_1 = __webpack_require__(163);
+const DEFAULT_POLL_TIMEOUT = 3600 * 10; // 20 minutes
+const DEFAULT_POLL_INTERVAL = 3600 * 5; // 5 minutes
+const createPullRequest = (client, context) => {
+    const { pull_request: pr } = context.payload;
+    const { owner, repo, number: pull_number } = context.issue;
+    if (!pr) {
+        throw new Error("Event payload missing `pull_request`");
+    }
+    return {
+        addReviewers(reviewers) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const result = yield client.pulls.createReviewRequest({
+                    owner,
+                    repo,
+                    pull_number,
+                    reviewers,
+                });
+                core.debug(JSON.stringify(result));
+            });
+        },
+        getCommitSha() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo });
+                return commit_sha || context.sha;
+            });
+        },
+        getCheckRuns() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const commitSha = yield this.getCommitSha();
+                const { data: { check_runs }, } = yield client.checks.listForRef({
+                    owner,
+                    repo,
+                    ref: commitSha,
+                });
+                return check_runs;
+            });
+        },
+    };
+};
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = core.getInput("token", { required: true });
+            const reviewers = core.getInput("reviewers", { required: true }).split(",");
+            const client = new github.GitHub(token);
+            const pr = createPullRequest(client, github.context);
+            const checkRuns = yield poll_1.poll(pr.getCheckRuns, utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
+            if (checkRuns && !utils_1.allChecksSuccess(checkRuns)) {
+                core.info(`PR @${github.context.sha} has failed`);
+                pr.addReviewers(reviewers);
+                return;
+            }
+            core.info(`PR @${github.context.sha} has passed`);
+            return;
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
 }
-catch (error) {
-    core.setFailed(error.message);
-}
+exports.run = run;
+run().then(() => core.info("Done!"));
 
 
 /***/ }),
@@ -1528,6 +1596,26 @@ const { paginateRest } = __webpack_require__(299);
 function paginatePlugin(octokit) {
   Object.assign(octokit, paginateRest(octokit));
 }
+
+
+/***/ }),
+
+/***/ 163:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.allChecksSuccess = (checkRuns) => true;
+// checkRuns.every(
+//   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
+//     checkRun.conclusion === "success"
+// );
+exports.allChecksCompleted = (checkRuns) => true;
+// checkRuns.every(
+//   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
+//     checkRun.status === "completed"
+// );
 
 
 /***/ }),
@@ -23906,6 +23994,46 @@ function hasNextPage (link) {
   deprecate(`octokit.hasNextPage() – You can use octokit.paginate or async iterators instead: https://github.com/octokit/rest.js#pagination.`)
   return getPageLinks(link).next
 }
+
+
+/***/ }),
+
+/***/ 931:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+function poll(fn, condition, timeout = 2000, interval = 5000) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const endTime = Number(new Date()) + timeout;
+        const checkCondition = () => __awaiter(this, arguments, void 0, function* () {
+            const res = yield fn();
+            if (condition(res)) {
+                return res;
+            }
+            // If the condition isn't met but the timeout hasn't elapsed, go again
+            else if (Number(new Date()) < endTime) {
+                setTimeout(() => checkCondition(), interval);
+            }
+            // Didn't match and too much time, reject!
+            else {
+                throw new Error("timed out for " + fn + ": " + arguments);
+            }
+        });
+        return checkCondition();
+    });
+}
+exports.poll = poll;
 
 
 /***/ }),
