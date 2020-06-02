@@ -35,8 +35,7 @@ const createPullRequest = (client: Octokit, context: Context) => {
 
       return commit_sha || context.sha;
     },
-    async getCheckRuns() {
-      const commitSha = await this.getCommitSha();
+    async getCheckRuns(commitSha: string) {
       const {
         data: { check_runs },
       } = await client.checks.listForRef({
@@ -58,11 +57,12 @@ export async function run() {
     const client = (new github.GitHub(token) as unknown) as Octokit;
 
     const pr = createPullRequest(client, github.context);
+    const commitSha = await pr.getCommitSha();
 
     const checkRuns = await poll<
       Octokit.ChecksListForRefResponseCheckRunsItem[]
     >(
-      pr.getCheckRuns,
+      () => pr.getCheckRuns(commitSha),
       allChecksCompleted,
       DEFAULT_POLL_TIMEOUT,
       DEFAULT_POLL_INTERVAL
