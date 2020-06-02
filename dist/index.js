@@ -1479,6 +1479,7 @@ function run() {
             const pr = createPullRequest(client, github.context);
             const commitSha = yield pr.getCommitSha();
             const checkRuns = yield poll_1.poll(() => pr.getCheckRuns(commitSha), utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
+            core.info('' + JSON.stringify(checkRuns));
             if (checkRuns && !utils_1.allChecksSuccess(checkRuns)) {
                 core.info(`PR @${github.context.sha} has failed`);
                 pr.addReviewers(reviewers);
@@ -1606,7 +1607,7 @@ function paginatePlugin(octokit) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allChecksSuccess = (checkRuns) => true;
+exports.allChecksSuccess = (checkRuns) => false;
 // checkRuns.every(
 //   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
 //     checkRun.conclusion === "success"
