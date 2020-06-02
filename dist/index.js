@@ -1458,9 +1458,8 @@ const createPullRequest = (client, context) => {
                 return commit_sha || context.sha;
             });
         },
-        getCheckRuns() {
+        getCheckRuns(commitSha) {
             return __awaiter(this, void 0, void 0, function* () {
-                const commitSha = yield this.getCommitSha();
                 const { data: { check_runs }, } = yield client.checks.listForRef({
                     owner,
                     repo,
@@ -1478,7 +1477,8 @@ function run() {
             const reviewers = core.getInput("reviewers", { required: true }).split(",");
             const client = new github.GitHub(token);
             const pr = createPullRequest(client, github.context);
-            const checkRuns = yield poll_1.poll(pr.getCheckRuns, utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
+            const commitSha = yield pr.getCommitSha();
+            const checkRuns = yield poll_1.poll(() => pr.getCheckRuns(commitSha), utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
             if (checkRuns && !utils_1.allChecksSuccess(checkRuns)) {
                 core.info(`PR @${github.context.sha} has failed`);
                 pr.addReviewers(reviewers);
