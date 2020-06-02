@@ -1443,27 +1443,36 @@ const createPullRequest = (client, context) => {
     return {
         addReviewers(reviewers) {
             return __awaiter(this, void 0, void 0, function* () {
-                const result = yield client.pulls.createReviewRequest({
+                yield client.pulls
+                    .createReviewRequest({
                     owner,
                     repo,
                     pull_number,
                     reviewers,
+                })
+                    .catch((e) => {
+                    throw e;
                 });
-                core.debug(JSON.stringify(result));
             });
         },
         getCommitSha() {
             return __awaiter(this, void 0, void 0, function* () {
-                const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo });
+                const { data: { head: { sha: commit_sha }, }, } = yield client.pulls.get({ owner, pull_number, repo }).catch((e) => {
+                    throw e;
+                });
                 return commit_sha || context.sha;
             });
         },
         getCheckRuns(commitSha) {
             return __awaiter(this, void 0, void 0, function* () {
-                const { data: { check_runs }, } = yield client.checks.listForRef({
+                const { data: { check_runs }, } = yield client.checks
+                    .listForRef({
                     owner,
                     repo,
                     ref: commitSha,
+                })
+                    .catch((e) => {
+                    throw e;
                 });
                 return check_runs;
             });
@@ -1479,7 +1488,6 @@ function run() {
             const pr = createPullRequest(client, github.context);
             const commitSha = yield pr.getCommitSha();
             const checkRuns = yield poll_1.poll(() => pr.getCheckRuns(commitSha), utils_1.allChecksCompleted, DEFAULT_POLL_TIMEOUT, DEFAULT_POLL_INTERVAL);
-            core.info('' + JSON.stringify(checkRuns));
             if (checkRuns && !utils_1.allChecksSuccess(checkRuns)) {
                 core.info(`PR @${github.context.sha} has failed`);
                 pr.addReviewers(reviewers);
@@ -1607,16 +1615,18 @@ function paginatePlugin(octokit) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allChecksSuccess = (checkRuns) => false;
+exports.allChecksSuccess = (checkRuns) => 
 // checkRuns.every(
 //   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
 //     checkRun.conclusion === "success"
 // );
-exports.allChecksCompleted = (checkRuns) => true;
+false;
+exports.allChecksCompleted = (checkRuns) => 
 // checkRuns.every(
 //   (checkRun: Octokit.ChecksListForRefResponseCheckRunsItem) =>
 //     checkRun.status === "completed"
 // );
+true;
 
 
 /***/ }),
