@@ -5,7 +5,8 @@ import { Octokit } from "@octokit/rest";
 import { poll } from "./poll";
 import { allChecksSuccess, allChecksCompleted } from "./utils";
 
-const DEFAULT_TIMEOUT = 3600 * 10; // 10 minutes
+const DEFAULT_POLL_TIMEOUT = 3600 * 10; // 20 minutes
+const DEFAULT_POLL_INTERVAL = 3600 * 5; // 5 minutes
 
 const createPullRequest = (client: Octokit, context: Context) => {
   const { pull_request: pr } = context.payload;
@@ -32,7 +33,7 @@ const createPullRequest = (client: Octokit, context: Context) => {
         },
       } = await client.pulls.get({ owner, pull_number, repo });
 
-      return commit_sha;
+      return commit_sha || context.sha;
     },
     async getCheckRuns() {
       const commitSha = await this.getCommitSha();
@@ -60,14 +61,21 @@ export async function run() {
 
     const checkRuns = await poll<
       Octokit.ChecksListForRefResponseCheckRunsItem[]
-    >(pr.getCheckRuns, DEFAULT_TIMEOUT, 5000, allChecksCompleted);
+    >(
+      pr.getCheckRuns,
+      allChecksCompleted,
+      DEFAULT_POLL_TIMEOUT,
+      DEFAULT_POLL_INTERVAL
+    );
 
     if (checkRuns && !allChecksSuccess(checkRuns)) {
       pr.addReviewers(reviewers);
     }
+
+    return;
   } catch (error) {
     core.setFailed(error.message);
   }
 }
 
-run();
+run().then(() => console.log("Done!"));
